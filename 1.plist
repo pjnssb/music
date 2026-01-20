@@ -5,16 +5,27 @@
     <key>CFBundleExecutable</key>
     <string>MyApp</string>
     <key>CFBundleIdentifier</key>
-    <string>com.yourname.myapp</string>
+    <string>com.troll.alistplayer</string>
     <key>CFBundleName</key>
-    <string>MyApp</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>AListPlayer</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>MinimumOSVersion</key>
     <string>14.0</string>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+    </array>
 </dict>
 </plist>
