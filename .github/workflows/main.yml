@@ -1,0 +1,57 @@
+name: Build IPA for TrollStore
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile Swift for iOS
+        run: |
+          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+          
+          # 自动寻找仓库里的第一个 swift 文件
+          SWIFT_FILE=$(find . -maxdepth 1 -name "*.swift" | head -n 1)
+          
+          if [ -z "$SWIFT_FILE" ]; then
+            echo "错误：仓库里没找到 .swift 文件！"
+            exit 1
+          fi
+          
+          echo "正在编译文件: $SWIFT_FILE"
+          
+          # 编译
+          swiftc -sdk $SDK_PATH \
+                 -target arm64-apple-ios14.0 \
+                 "$SWIFT_FILE" \
+                 -o MyApp
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload/MyApp.app
+          
+          # 移动二进制文件
+          mv MyApp Payload/MyApp.app/
+          
+          # 确保二进制文件有执行权限 (关键)
+          chmod +x Payload/MyApp.app/MyApp
+          
+          # 复制 Info.plist
+          if [ -f "Info.plist" ]; then
+            cp Info.plist Payload/MyApp.app/
+          else
+            echo "错误：缺少 Info.plist 文件！"
+            exit 1
+          fi
+          
+          zip -r MyApp.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrollStore-IPA
+          path: MyApp.ipa
