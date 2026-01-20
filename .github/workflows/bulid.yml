@@ -1,0 +1,39 @@
+name: Build IPA for TrollStore
+
+on:
+  workflow_dispatch: # 允许手动点击按钮开始构建
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Compile Swift for iOS
+        run: |
+          # 获取 iOS SDK 路径
+          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+          
+          # 编译 Swift 文件为 ARM64 二进制文件
+          # -sdk: 指定 iOS SDK 路径
+          # -target: 指定架构为 arm64 (iPhone 专用)
+          swiftc -sdk $SDK_PATH -target arm64-apple-ios14.0 main.swift -o MyApp
+
+      - name: Package IPA
+        run: |
+          # 按照 IPA 标准结构创建文件夹
+          mkdir -p Payload/MyApp.app
+          
+          # 移动二进制文件和 plist
+          mv MyApp Payload/MyApp.app/
+          cp Info.plist Payload/MyApp.app/
+          
+          # 压缩成 IPA
+          zip -r MyApp.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrollStore-IPA
+          path: MyApp.ipa
