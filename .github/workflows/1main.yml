@@ -1,0 +1,56 @@
+name: Build AList Player for TrollStore
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Compile Swift for iOS
+        run: |
+          # 1. 获取 SDK 路径
+          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+          
+          # 2. 找到你的代码文件 (假设你上传的文件名是 1.swift)
+          SWIFT_FILE=$(find . -maxdepth 1 -name "*.swift" | head -n 1)
+          
+          if [ -z "$SWIFT_FILE" ]; then
+            echo "Error: No .swift file found in the root directory!"
+            exit 1
+          fi
+          
+          echo "Compiling $SWIFT_FILE ..."
+          
+          # 3. 编译：关键参数 -parse-as-library
+          # -O 提高性能, -target 确保是 ARM64 架构
+          swiftc -sdk $SDK_PATH \
+                 -target arm64-apple-ios14.0 \
+                 -parse-as-library \
+                 -O \
+                 "$SWIFT_FILE" \
+                 -o MyApp
+
+      - name: Package IPA
+        run: |
+          # 创建 Payload 结构
+          mkdir -p Payload/MyApp.app
+          
+          # 移动二进制文件并赋予执行权限
+          mv MyApp Payload/MyApp.app/
+          chmod +x Payload/MyApp.app/MyApp
+          
+          # 复制配置文件
+          cp Info.plist Payload/MyApp.app/
+          
+          # 打包
+          zip -r AListPlayer.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AListPlayer-IPA
+          path: AListPlayer.ipa
